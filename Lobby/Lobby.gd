@@ -1,15 +1,22 @@
 extends CanvasLayer
 
-onready var joinbutton = $vbxLobbyContainer/btnJoin
-onready var hostbutton = $vbxLobbyContainer/btnHost
-onready var status = $hbxStatusContainer/lblStatus
-onready var colors = $vbxLobbyContainer/hbxIPContainer2/optColors
-onready var ip_address = $vbxLobbyContainer/hbxIPContainer/txtIP
-onready var user_name = $vbxLobbyContainer/hbxNameContainer/txtName
+@onready 
+var joinbutton = $vbxLobbyContainer/btnJoin
+@onready
+var hostbutton = $vbxLobbyContainer/btnHost
+@onready
+var status = $hbxStatusContainer/lblStatus
+@onready
+var colors = $vbxLobbyContainer/hbxIPContainer2/optColors
+@onready
+var ip_address = $vbxLobbyContainer/hbxIPContainer/txtIP
+@onready
+var user_name = $vbxLobbyContainer/hbxNameContainer/txtName
 
 func _ready() -> void:
 	compile_colors()
-	get_tree().connect("connection_failed", self, "connected_fail")
+	multiplayer.connection_failed.connect(connected_fail)
+#	get_tree().connect("connection_failed", self, "connected_fail")
 	
 #populate the option list with colors
 func compile_colors():
@@ -25,13 +32,16 @@ func _on_btnHost_pressed() -> void:
 	status.text = "Hosting"
 	Network.user_name = user_name.text
 	#put our username and ID in the dictionary
-	Network.user_list[str(get_tree().get_network_unique_id())] = Network.user_name
+	Network.user_list[str(multiplayer.get_unique_id())] = Network.user_name
 
 func _on_btnJoin_pressed() -> void:
 	#Create a  client that will connect to the server
-	var client : NetworkedMultiplayerENet = NetworkedMultiplayerENet.new()
-	client.create_client(ip_address.text,9999)
-	get_tree().set_network_peer(client)
+	var peer = ENetMultiplayerPeer.new()
+	peer.create_client(ip_address.text, 9999)
+	multiplayer.multiplayer_peer = peer
+#	var client : ENetMultiplayerPeer = ENetMultiplayerPeer.new()
+#	client.create_client(ip_address.text,9999)
+#	get_tree().set_network_peer(client)
 	
 	#Disable buttons while we wait
 	joinbutton.disabled = true
@@ -50,5 +60,5 @@ func connected_fail():
 	hostbutton.disabled = false
 
 #Update our users colour to be used in the chatroom
-func _on_optColors_item_selected(index: int) -> void:
+func _on_optColors_item_selected(_index: int) -> void:
 	Network.user_color = colors.text
